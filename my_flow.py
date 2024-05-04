@@ -1,71 +1,55 @@
 import time
 from prefect import flow
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromiumService
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
 
-def get_table_data(driver):
-    # Find the table element by its ID
-    table = driver.find_element(By.XPATH, '//*[@id="ContentPlaceHolder2_LData"]')
-    # Find all rows of the table
-    rows = table.find_elements(By.TAG_NAME, "tr")
-
+def get_table_data(page):
+    table = page.locator('//*[@id="ContentPlaceHolder2_LData"]')
+    table.wait_for()
+    rows = table.locator("tr").all()
+    print(rows)
     table_data = []
-    print(len(rows))
-    for i, row in enumerate(rows[4:]):  # Skip the first four rows
-        if i % 100 == 0:
-            print(f"Processing row {i}")
-        # Find all cells of the row
-        cells = row.find_elements(By.TAG_NAME, "td")
-        # Extract text from each cell and append to table_data
-        table_data.append([cell.text for cell in cells])
-
+    for row in rows[4:]:
+        print(row)
+        table_data.append([cell.inner_text() for cell in row.locator("td").all()])
     return table_data
 
-@flow(log_prints=True)
-def run_selenium():
-    # import chromedriver_autoinstaller
+@flow()
+def run_playwright():
+    import playwright.sync_api as p
 
-    # chromedriver_autoinstaller.install()
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(
-        service=ChromiumService(
-            ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(),
-            options=options,
+    with p.sync_playwright() as pw:
+
+        browser = pw.chromium.connect_over_cdp(
+            "wss://production-sfo.browserless.io?token=Q24V0Yq4e6ifri9f9b1b075944bcdad3f742ad9f8c"
         )
-    )
+        context = browser.new_context()
+        page = context.new_page()
+        page.goto("https://oop.ky.gov/")
 
-    driver.get("https://oop.ky.gov/")
+        pc_checkbox = page.locator('//*[@id="ContentPlaceHolder2_chkBoards_9"]')
+        pc_checkbox.hover()
+        pc_checkbox.click()
 
-    # Find and interact with elements using Selenium
-    pc_checkbox = driver.find_element(
-        By.XPATH, '//*[@id="ContentPlaceHolder2_chkBoards_9"]'
-    )
-    pc_checkbox.click()
+        last_name_box = page.locator('//*[@id="ContentPlaceHolder2_TLname"]')
+        last_name_box.hover()
+        last_name_box.click()
 
-    all_data = []
+        all_data = []
 
-    for letter in "AB":
-        print(f"Scraping for {letter}...")
-        last_name_box = driver.find_element(
-            By.XPATH, '//*[@id="ContentPlaceHolder2_TLname"]'
-        )
-        last_name_box.clear()
-        last_name_box.send_keys(letter)
+        for letter in "AB":
+            t_data = []
+            print(f"Scraping for {letter}...")
+            last_name_box.fill(letter)
 
-        search_button = driver.find_element(
-            By.XPATH, '//*[@id="ContentPlaceHolder2_BSrch"]'
-        )
-        search_button.click()
-        time.sleep(5)
-        print("---getting table data...")
-        t_data = get_table_data(driver)
-        print(f"---{len(t_data)} rows retrieved...")
+            search_button = page.locator('//*[@id="ContentPlaceHolder2_BSrch"]')
+            search_button.hover()
+            search_button.click()
+            time.sleep(5)
+            print("---getting table data...")
+            t_data = get_table_data(page)
+            print(f"---{len(t_data)} rows retrieved...")
+            all_data.extend(t_data)
+
+    return all_data
         all_data.extend(t_data)
 
     return all_data
