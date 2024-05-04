@@ -33,16 +33,11 @@ def run_selenium():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     # driver = webdriver.Chrome(
-    #     service=ChromiumService(
-    #         ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(),
-    #         options=options,
-    #     )
-    # )
-
-    # service = webdriver.ChromeService(executable_path=chromedriver_bin)
-
-    # driver = webdriver.Chrome(service=service, options=options)
-    driver = webdriver.Chrome(options=options)
+        service=ChromiumService(
+            ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(),
+            options=options,
+        )
+    )
 
     driver.get("https://oop.ky.gov/")
 
