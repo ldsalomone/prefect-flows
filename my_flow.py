@@ -50,6 +50,3 @@ def run_playwright():
             all_data.extend(t_data)
 
     return all_data
-        all_data.extend(t_data)
-
-    return all_data
