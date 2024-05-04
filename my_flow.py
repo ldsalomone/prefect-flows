@@ -23,7 +23,7 @@ def get_table_data(driver):
 
     return table_data
 
-
+@flow(log_prints=True)
 def run_selenium():
     # import chromedriver_autoinstaller
 
