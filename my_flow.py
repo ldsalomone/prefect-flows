@@ -1,3 +1,4 @@
+import time
 from prefect import flow
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -32,7 +33,7 @@ def run_selenium():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
-    # driver = webdriver.Chrome(
+    driver = webdriver.Chrome(
         service=ChromiumService(
             ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(),
             options=options,
